@@ -19,30 +19,27 @@ async function fetchMessages() {
     loadingEl.classList.add('show');
     containerEl.innerHTML = '';
 
-    // Get JSON files in /messages (local, static) for testing
-    const messageFiles = [
-        "messages/example.json",
-        "messages/techstart-team.json"
-    ];
+    // // Get JSON files in /messages (local, static) for testing
+    // const messageFiles = [
+    //     "messages/example.json",
+    //     "messages/techstart-team.json"
+    // ];
 
-    // use messageFiles to fetch the messages
-    const messages = [];
-    for (let i = 0; i < messageFiles.length; i++) {
-        const req = new XMLHttpRequest();
-        req.open('GET', messageFiles[i], false); // synchronous request
-        req.send(null);
-        if (req.status === 200) {
-            messages.push(JSON.parse(req.responseText));
-        }
-    }
+    // // use messageFiles to fetch the messages
+    // const messages = [];
+    // for (let i = 0; i < messageFiles.length; i++) {
+    //     const req = new XMLHttpRequest();
+    //     req.open('GET', messageFiles[i], false); // synchronous request
+    //     req.send(null);
+    //     if (req.status === 200) {
+    //         messages.push(JSON.parse(req.responseText));
+    //     }
+    // }
     
-    displayMessages(messages, containerEl);
-    loadingEl.classList.remove('show');
+    // displayMessages(messages, containerEl);
+    // loadingEl.classList.remove('show');
 
-    return;
-
-    
-
+    // return;
 
     try {
         // Fetch the contents of the messages folder
