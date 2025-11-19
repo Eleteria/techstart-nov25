@@ -4,10 +4,13 @@ const REPO_NAME = 'techstart-nov25';
 const MESSAGES_FOLDER = 'messages';
 const BRANCH = 'main';
 
-// GitHub API endpoint to get repository contents (only for listing directory)
-const GITHUB_API_BASE = 'https://api.github.com/repos';
 // Raw GitHub URL for direct file access (no API rate limits)
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com';
+const MANIFEST_FILE = 'manifest.json';
+
+function buildRawUrl(filename) {
+    return `${GITHUB_RAW_BASE}/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${MESSAGES_FOLDER}/${filename}`;
+}
 
 /**
  * Fetch all JSON files from the messages folder using GitHub API
@@ -42,26 +45,20 @@ async function fetchMessages() {
     // return;
 
     try {
-        // Fetch the contents of the messages folder
-        const folderUrl = `${GITHUB_API_BASE}/${REPO_OWNER}/${REPO_NAME}/contents/${MESSAGES_FOLDER}?ref=${BRANCH}`;
-        const folderResponse = await fetch(folderUrl);
-        
-        if (!folderResponse.ok) {
-            if (folderResponse.status === 404) {
-                throw new Error('Repository not found. Please check that the repository name and owner are correct.');
-            } else if (folderResponse.status === 403) {
-                throw new Error('Access denied. Make sure the repository is public.');
+        // Fetch manifest to know which files to load
+        const manifestUrl = buildRawUrl(MANIFEST_FILE);
+        const manifestResponse = await fetch(manifestUrl);
+
+        if (!manifestResponse.ok) {
+            if (manifestResponse.status === 404) {
+                throw new Error('Manifest not found. Run the manifest update script or wait for the GitHub Action to regenerate it.');
             }
-            throw new Error(`Failed to fetch messages folder: ${folderResponse.status}`);
+            throw new Error(`Failed to fetch manifest: ${manifestResponse.status}`);
         }
 
-        const folderData = await folderResponse.json();
-        
-        // Filter for JSON files only
-        const jsonFiles = folderData.filter(file => 
-            file.type === 'file' && file.name.endsWith('.json')
-        );
-
+        const manifestData = await manifestResponse.json();
+        const jsonFiles = Array.isArray(manifestData.messages) ? manifestData.messages : [];
+        console.log(jsonFiles);
         if (jsonFiles.length === 0) {
             showEmptyState(containerEl);
             loadingEl.classList.remove('show');
@@ -70,23 +67,22 @@ async function fetchMessages() {
 
         // Fetch and parse each JSON file using raw GitHub URLs (no API rate limits)
         const messages = await Promise.all(
-            jsonFiles.map(async (file) => {
+            jsonFiles.map(async (filename) => {
                 try {
-                    // Use raw GitHub URL instead of API download_url
-                    const rawUrl = `${GITHUB_RAW_BASE}/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${MESSAGES_FOLDER}/${file.name}`;
+                    const rawUrl = buildRawUrl(filename);
                     const fileResponse = await fetch(rawUrl);
                     if (!fileResponse.ok) {
-                        console.warn(`Failed to fetch ${file.name}`);
+                        console.warn(`Failed to fetch ${filename}`);
                         return null;
                     }
                     const messageData = await fileResponse.json();
                     return {
                         ...messageData,
-                        filename: file.name,
-                        lastModified: file.name // We'll use filename as identifier
+                        filename,
+                        lastModified: filename // We'll use filename as identifier
                     };
                 } catch (error) {
-                    console.warn(`Error parsing ${file.name}:`, error);
+                    console.warn(`Error parsing ${filename}:`, error);
                     return null;
                 }
             })
