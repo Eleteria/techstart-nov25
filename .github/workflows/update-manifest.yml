@@ -1,0 +1,33 @@
+name: Update messages manifest
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'messages/*.json'
+      - '!messages/manifest.json'
+      - 'scripts/update-manifest.mjs'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Update manifest
+        run: node scripts/update-manifest.mjs
+
+      - name: Commit manifest changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: update messages manifest'
+          file_pattern: messages/manifest.json
+

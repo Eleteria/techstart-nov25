@@ -75,6 +75,16 @@ Once your pull request is reviewed and merged, your message will automatically a
 - Keep messages appropriate and respectful
 - Follow the JSON format specified in `messages/README.md`
 
+## 🔄 Manifest & Automation
+
+The webpage reads message files based on `messages/manifest.json`. This file is regenerated automatically by a GitHub Actions workflow whenever new JSON files are pushed to `main`. If you are working locally and want to refresh the manifest before opening a pull request, run:
+
+```sh
+node scripts/update-manifest.mjs
+```
+
+This script scans the `messages/` directory, lists every `.json` message file, and rewrites the manifest.
+
 ## 📄 License
 
 See the [LICENSE](LICENSE) file for details.
